@@ -1,8 +1,14 @@
 ## B站直播录播工具
 
+### install
+
+```
+$ npm install @tokine/bilibili-recorder -S
+```
+
 ### Useage
 ```
-import BilibiliRecorder from 'bilibili-recorder'
+import BilibiliRecorder from '@tokine/bilibili-recorder'
 
 const recorder = new BilibiliRecorder(
   { 
