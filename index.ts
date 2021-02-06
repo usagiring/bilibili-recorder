@@ -1,4 +1,5 @@
-import axios, { AxiosInstance, AxiosRequestConfig } from "axios"
+import axios, { AxiosInstance, AxiosRequestConfig, CancelTokenSource } from "axios"
+const CancelToken = axios.CancelToken;
 import * as fs from 'fs'
 
 const BASE_LIVE_URL = 'https://api.live.bilibili.com'
@@ -6,11 +7,14 @@ const BASE_LIVE_URL = 'https://api.live.bilibili.com'
 interface Options {
   roomId?: number
   output?: string
+  qn?: number,
+  platform?: string
 }
 
 class BilibiliRecorder {
   options: Options
   axiosInstance: AxiosInstance
+  source: CancelTokenSource
 
   constructor(options: Options, axiosOptions: AxiosRequestConfig = {}) {
     this.options = options || {}
@@ -23,15 +27,13 @@ class BilibiliRecorder {
       },
     }
     this.axiosInstance = axios.create(Object.assign({}, defaultAxiosOptions, axiosOptions))
+    this.source = CancelToken.source();
   }
 
   async record(options: Options) {
-    const { roomId, output } = Object.assign({}, this.options, options)
+    const { roomId, output, qn } = Object.assign({}, this.options, options)
     if (!roomId) throw new Error('roomId is required.')
-    const result = await this.getPlayUrl(roomId)
-
-    //TODO
-    const playUrl = result.data.durl[0].url;
+    const playUrl = await this.getRandomPlayUrl({ roomId, qn })
 
     const writeStream = fs.createWriteStream(output || `${roomId}_${Date.now()}.flv`);
     const liveStream = await this.getLiveStream(playUrl)
@@ -47,15 +49,28 @@ class BilibiliRecorder {
     });
   }
 
-  async getPlayUrl(roomId?: number) {
-    const url = `${BASE_LIVE_URL}/room/v1/Room/playUrl?cid=${roomId || this.options.roomId}&qn=0&platform=web`
+  async cancelRecord() {
+    console.log('cancel live stream')
+    this.source.cancel('Operation canceled by the user.');
+  }
+
+  async getPlayUrl(options: Options) {
+    const { roomId, platform, qn } = options
+    const url = `${BASE_LIVE_URL}/room/v1/Room/playUrl?cid=${roomId || this.options.roomId}&qn=${qn || 0}&platform=${platform || 'web'}`
     const res = await this.axiosInstance.get(url)
     return res.data
+  }
+
+  async getRandomPlayUrl(options: Options) {
+    const result = await this.getPlayUrl(options)
+    const urlsLength = result.data.durl.length
+    return result.data.durl[Math.floor(Math.random() * urlsLength)].url;
   }
 
   async getLiveStream(playUrl: string) {
     const res = await this.axiosInstance.get(playUrl, {
       responseType: "stream",
+      cancelToken: this.source.token
     })
     return res.data
   }
