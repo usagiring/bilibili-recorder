@@ -36,7 +36,7 @@ class BilibiliRecorder {
   async record(options: Options) {
     const now = Date.now()
     const id = String(now)
-    this.sourceMap = this.sourceMap ? { ...this.sourceMap, id: CancelToken.source() } : { id: CancelToken.source() }
+    this.sourceMap = this.sourceMap ? { ...this.sourceMap, [id]: CancelToken.source() } : { [id]: CancelToken.source() }
 
     const { roomId, output, qn } = Object.assign({}, this.options, options)
     if (!roomId) throw new Error('roomId is required.')
