@@ -75,6 +75,12 @@ class BilibiliRecorder {
       throw e
     });
 
+    liveStream.on("close", () => {
+      delete this.sourceMap[id]
+      writeStream.end();
+      clearInterval(dowloadTimer)
+    })
+
     return {
       id
     }
