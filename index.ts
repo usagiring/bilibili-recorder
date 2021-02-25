@@ -11,6 +11,7 @@ interface Options {
   output?: string
   qn?: number,
   platform?: string
+  emitter?: EventEmitter
 }
 
 class BilibiliRecorder {
@@ -21,7 +22,7 @@ class BilibiliRecorder {
 
   constructor(options: Options, axiosOptions: AxiosRequestConfig = {}) {
     this.options = options || {}
-    this.emitter = new EventEmitter()
+    this.emitter = options.emitter || new EventEmitter()
     const defaultAxiosOptions = {
       headers: {
         origin: 'https://live.bilibili.com',
