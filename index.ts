@@ -34,17 +34,17 @@ class BilibiliRecorder {
     this.axiosInstance = axios.create(Object.assign({}, defaultAxiosOptions, axiosOptions))
   }
 
-  async record(options: Options) {
+  async record(options: Options, axiosOptions: AxiosRequestConfig = {}) {
     const now = Date.now()
     const id = String(now)
     this.sourceMap = this.sourceMap ? { ...this.sourceMap, [id]: CancelToken.source() } : { [id]: CancelToken.source() }
 
     const { roomId, output, qn } = Object.assign({}, this.options, options)
     if (!roomId) throw new Error('roomId is required.')
-    const playUrl = await this.getRandomPlayUrl({ roomId, qn })
+    const playUrl = await this.getRandomPlayUrl({ roomId, qn }, axiosOptions)
 
     const writeStream = fs.createWriteStream(output || `${roomId}_${now}.flv`);
-    const liveStream = await this.getLiveStream(playUrl)
+    const liveStream = await this.getLiveStream({ playUrl }, axiosOptions)
     const bufferSize = {
       current: 0,
       preTick: 0
@@ -93,24 +93,25 @@ class BilibiliRecorder {
     this.sourceMap[id].cancel('Operation canceled by the user.');
   }
 
-  async getPlayUrl(options: Options) {
+  async getPlayUrl(options: Options, axiosOptions: AxiosRequestConfig = {}) {
     const { roomId, platform, qn } = options
     const url = `${BASE_LIVE_URL}/room/v1/Room/playUrl?cid=${roomId || this.options.roomId}&qn=${qn || 0}&platform=${platform || 'web'}`
-    const res = await this.axiosInstance.get(url)
+    const res = await this.axiosInstance.get(url, axiosOptions)
     return res.data
   }
 
-  async getRandomPlayUrl(options: Options) {
-    const result = await this.getPlayUrl(options)
+  async getRandomPlayUrl(options: Options, axiosOptions: AxiosRequestConfig = {}) {
+    const result = await this.getPlayUrl(options, axiosOptions)
     const urlsLength = result.data.durl.length
     return result.data.durl[Math.floor(Math.random() * urlsLength)].url;
   }
 
-  async getLiveStream(playUrl: string, id?: string) {
-    id = id || Object.keys(this.sourceMap)[0]
+  async getLiveStream({ playUrl, id }: { playUrl: string, id?: string }, axiosOptions: AxiosRequestConfig = {}) {
+    const _id = id || Object.keys(this.sourceMap)[0]
     const res = await this.axiosInstance.get(playUrl, {
+      ...axiosOptions,
       responseType: "stream",
-      cancelToken: this.sourceMap[id].token
+      cancelToken: this.sourceMap[_id].token,
     })
     return res.data
   }

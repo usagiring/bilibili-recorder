@@ -21,20 +21,22 @@ const recorder = new BilibiliRecorder(
 )
 
 // 开始录制
-recorder.record([options])
+recorder.record([options], axiosOptions)
 return {
   id
 }
+// 发出下载速度事件
+emitter.emit(`${id}-download-rate`, { bps, totalSize: bufferSize.current })
 
 // 取消录制
 cancelRecord([id])
 
 // 获取视频流地址
-getPlayUrl([options])
+getPlayUrl([options], axiosOptions)
 
 // 随机获取一个视频流地址
-getRandomPlayUrl([options])
+getRandomPlayUrl([options], axiosOptions)
 
 // 获取视频流
-getLiveStream(playUrl)
+getLiveStream({playUrl}, axiosOptions)
 ```
