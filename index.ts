@@ -63,6 +63,7 @@ class BilibiliRecorder {
     });
 
     liveStream.on("end", () => {
+      this.emitter.emit(`${id}-download-end`)
       writeStream.end();
       delete this.sourceMap[id]
       clearInterval(dowloadTimer)
@@ -70,13 +71,14 @@ class BilibiliRecorder {
 
     liveStream.on("error", (e) => {
       console.error(e);
+      this.emitter.emit(`${id}-download-error`)
       writeStream.end();
       delete this.sourceMap[id]
       clearInterval(dowloadTimer)
-      throw e
     });
 
     liveStream.on("close", () => {
+      this.emitter.emit(`${id}-download-close`)
       delete this.sourceMap[id]
       writeStream.end();
       clearInterval(dowloadTimer)
@@ -88,9 +90,12 @@ class BilibiliRecorder {
   }
 
   async cancelRecord(id?: string) {
-    id = id || Object.keys(this.sourceMap)[0]
-    console.log('cancel live stream')
-    this.sourceMap[id].cancel('Operation canceled by the user.');
+    const _id = id || Object.keys(this.sourceMap)[0]
+    console.log('cancel live stream.')
+    if (!_id) {
+      console.warn('cancel token not found.')
+    }
+    this.sourceMap[_id].cancel('Operation canceled by the user.');
   }
 
   async getPlayUrl(options: Options, axiosOptions: AxiosRequestConfig = {}) {
