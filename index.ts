@@ -99,14 +99,18 @@ class BilibiliRecorder {
     this.sourceMap[_id].cancel('Operation canceled by the user.');
   }
 
-  async getPlayUrl(options: Options, axiosOptions: AxiosRequestConfig = {}) {
+  async getPlayUrl(options: Options = {}, axiosOptions: AxiosRequestConfig = {}) {
     const { roomId, platform, qn } = options
+    if (!roomId && !this.options.roomId) {
+      throw new Error('not found roomId.')
+    }
+
     const url = `${BASE_LIVE_URL}/room/v1/Room/playUrl?cid=${roomId || this.options.roomId}&qn=${qn || 0}&platform=${platform || 'web'}`
     const res = await this.axiosInstance.get(url, axiosOptions)
     return res.data
   }
 
-  async getRandomPlayUrl(options: Options, axiosOptions: AxiosRequestConfig = {}) {
+  async getRandomPlayUrl(options: Options = {}, axiosOptions: AxiosRequestConfig = {}) {
     const result = await this.getPlayUrl(options, axiosOptions)
     const urlsLength = result.data.durl.length
     return result.data.durl[Math.floor(Math.random() * urlsLength)].url;

@@ -25,7 +25,7 @@ const recorder = new BilibiliRecorder(
 // -- methods --
 
 // 开始录制
-recorder.record([options], axiosOptions)
+recorder.record([options], [axiosOptions])
 return {
   id
 }
@@ -40,7 +40,7 @@ recorder.getPlayUrl([options], [axiosOptions])
 recorder.getRandomPlayUrl([options], [axiosOptions])
 
 // 获取视频流
-recorder.getLiveStream({playUrl}, axiosOptions)
+recorder.getLiveStream({ playUrl }, [axiosOptions])
 
 
 // -- events --
