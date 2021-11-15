@@ -6,7 +6,7 @@
 $ npm install @tokine/bilibili-recorder -S
 ```
 
-### Useage
+### usage
 ```
 import BilibiliRecorder from '@tokine/bilibili-recorder'
 
@@ -20,23 +20,40 @@ const recorder = new BilibiliRecorder(
   { adapter: httpAdapter, } // AxiosRequestConfig, 可自定义请求参数
 )
 
+
+
+// -- methods --
+
 // 开始录制
 recorder.record([options], axiosOptions)
 return {
   id
 }
+
+// 取消录制
+recorder.cancelRecord([id])
+
+// 获取视频流地址
+recorder.getPlayUrl([options], [axiosOptions])
+
+// 随机获取一个视频流地址
+recorder.getRandomPlayUrl([options], [axiosOptions])
+
+// 获取视频流
+recorder.getLiveStream({playUrl}, axiosOptions)
+
+
+// -- events --
+
 // 发出下载速度事件
 emitter.emit(`${id}-download-rate`, { bps, totalSize: bufferSize.current })
 
-// 取消录制
-cancelRecord([id])
+// 结束事件
+emitter.emit(`${id}-download-end`)
 
-// 获取视频流地址
-getPlayUrl([options], axiosOptions)
+// 错误事件
+emitter.emit(`${id}-download-error`)
 
-// 随机获取一个视频流地址
-getRandomPlayUrl([options], axiosOptions)
-
-// 获取视频流
-getLiveStream({playUrl}, axiosOptions)
+// 关闭事件
+emitter.emit(`${id}-download-close`)
 ```

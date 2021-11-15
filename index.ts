@@ -1,7 +1,8 @@
 import axios, { AxiosInstance, AxiosRequestConfig, CancelTokenSource } from "axios"
 import EventEmitter from "events";
-const CancelToken = axios.CancelToken;
 import * as fs from 'fs'
+
+const CancelToken = axios.CancelToken;
 
 const BASE_LIVE_URL = 'https://api.live.bilibili.com'
 const DOWNLOAD_TIMER_MS = 2000
@@ -34,7 +35,7 @@ class BilibiliRecorder {
     this.axiosInstance = axios.create(Object.assign({}, defaultAxiosOptions, axiosOptions))
   }
 
-  async record(options: Options, axiosOptions: AxiosRequestConfig = {}) {
+  async record(options: Options = {}, axiosOptions: AxiosRequestConfig = {}) {
     const now = Date.now()
     const id = String(now)
     this.sourceMap = this.sourceMap ? { ...this.sourceMap, [id]: CancelToken.source() } : { [id]: CancelToken.source() }
@@ -44,7 +45,7 @@ class BilibiliRecorder {
     const playUrl = await this.getRandomPlayUrl({ roomId, qn }, axiosOptions)
 
     const writeStream = fs.createWriteStream(output || `${roomId}_${now}.flv`);
-    const liveStream = await this.getLiveStream({ playUrl }, axiosOptions)
+    const liveStream = await this.getLiveStream({ playUrl, id }, axiosOptions)
     const bufferSize = {
       current: 0,
       preTick: 0
@@ -93,7 +94,7 @@ class BilibiliRecorder {
     const _id = id || Object.keys(this.sourceMap)[0]
     console.log('cancel live stream.')
     if (!_id) {
-      console.warn('cancel token not found.')
+      throw new Error('not found')
     }
     this.sourceMap[_id].cancel('Operation canceled by the user.');
   }
@@ -113,6 +114,9 @@ class BilibiliRecorder {
 
   async getLiveStream({ playUrl, id }: { playUrl: string, id?: string }, axiosOptions: AxiosRequestConfig = {}) {
     const _id = id || Object.keys(this.sourceMap)[0]
+    if (!_id) {
+      throw new Error('not found')
+    }
     const res = await this.axiosInstance.get(playUrl, {
       ...axiosOptions,
       responseType: "stream",
